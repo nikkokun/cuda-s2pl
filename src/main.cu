@@ -10,7 +10,7 @@
 #include <chrono>
 
 
-#define readset_size 10
+#define readset_size 20
 #define transaction_size 4000000
 
 const int table_size = 1000000;
@@ -71,6 +71,23 @@ __device__ void quickSort(int arr[], int low, int high)
     }
 }
 
+__device__ void insertionSort(int arr[])
+{
+    int i, key, j;
+    for (i = 1; i < readset_size; i++) {
+        key = arr[i];
+        j = i - 1;
+
+        /* Move elements of arr[0..i-1], that are
+          greater than key, to one position ahead
+          of their current position */
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
+}
 
 __global__ void myKernel(int *lock_table, int *table, transactions *d_transactions, int stride) {
 
@@ -80,7 +97,8 @@ __global__ void myKernel(int *lock_table, int *table, transactions *d_transactio
 
 //    sort phase
     for(int i = start; i < end; ++i) {
-        quickSort(d_transactions[i], 0, readset_size-1);
+//        quickSort(d_transactions[i], 0, readset_size-1);
+        insertionSort(d_transactions[i]);
     }
     //process transactions
     for(int i = start; i < end; ++i) {
